@@ -1,1 +1,3 @@
 openrural.egg-info
+local_settings.py
+*.pyc

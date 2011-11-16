@@ -63,7 +63,7 @@ SCRAPER_LOGFILE_NAME = '/tmp/scraperlog_openrural'
 
 # If this cookie is set with the given value, then the site will give the user
 # staff privileges (including the ability to view non-public schemas).
-STAFF_COOKIE_NAME = 'obstaff_openrural'
+STAFF_COOKIE_NAME = ''
 STAFF_COOKIE_VALUE = ''
 
 # What LocationType to redirect to when viewing /locations.

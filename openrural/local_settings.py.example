@@ -1,0 +1,26 @@
+from openrural.settings import *
+
+DATABASES = {
+    'default': {
+        'NAME': 'openblock_durham',
+        'USER': '',
+        'PASSWORD': '',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'OPTIONS': {},
+        'HOST': '',
+        'PORT': '',
+        'TEST_NAME': 'test_openblock',
+    },
+}
+
+# Set both of these to distinct, secret strings that include two instances
+# of '%s' each. Example: 'j8#%s%s' -- but don't use that, because it's not
+# secret.  And don't check the result in to a public code repository
+# or otherwise put it out in the open!
+PASSWORD_CREATE_SALT = '%s%s'
+PASSWORD_RESET_SALT = '%s%s'
+
+# If this cookie is set with the given value, then the site will give the user
+# staff privileges (including the ability to view non-public schemas).
+STAFF_COOKIE_NAME = 'obstaff_openrural'
+STAFF_COOKIE_VALUE = ''
