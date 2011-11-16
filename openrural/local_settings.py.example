@@ -2,7 +2,7 @@ from openrural.settings import *
 
 DATABASES = {
     'default': {
-        'NAME': 'openblock_durham',
+        'NAME': 'openblock_devel',
         'USER': '',
         'PASSWORD': '',
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
