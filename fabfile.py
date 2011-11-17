@@ -33,12 +33,12 @@ env.repo = u'https://github.com/openrural/openrural-nc.git'
 env.shell = '/bin/bash -c'
 env.placements = ['us-east-1a', 'us-east-1d']
 env.environments = ['staging', 'production']
-env.deployments = ['openrural-nc',]
+env.deployments = ['whiteville',]
 env.deployment_dir = os.path.join(os.path.dirname(__file__), 'deployment') 
 env.templates_dir = os.path.join(env.deployment_dir, 'templates')
 env.server_ports = {'staging': 8000, 'production': 8001}
 env.branches = {
-    'openrural-nc': 'master',
+    'whiteville': 'master',
 }
 env.instance_types = {'staging': 'm1.small', 'production': 'm1.large'}
 
@@ -124,8 +124,10 @@ def new_instance(placement, deployment, environment, count=1):
 
 
 @task
-def staging():
-    env.deployment_tag = 'openrural-nc'
+def staging(deployment):
+    if deployment not in env.deployments:
+        abort('Choose a valid deployment: %s' % ', '.join(env.deployments))
+    env.deployment_tag = deployment
     env.environment = 'staging'
     _setup_path()
 
@@ -200,6 +202,21 @@ def create_db():
 
     require('environment', provided_by=env.environments)
     sudo('createdb -O %(database_user)s -T %(template_db)s %(database_name)s' % env, user='postgres')
+
+
+@task
+def reset_db():
+    """Drop and recreate the Postgres database."""
+    
+    if not env.environment == 'staging':
+        abort('reset_db requires the staging environment.')
+    answer = prompt('Are you sure you want to drop and re-create the database?', default='n')
+    if answer == 'y':
+        sudo('dropdb %(database_name)s' % env, user='postgres')
+        create_db()
+        syncdb()
+    else:
+        abort('Aborting...')
 
 
 @task
