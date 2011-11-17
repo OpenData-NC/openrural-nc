@@ -410,24 +410,16 @@ def update_source():
 
 
 @task
-def syncdb():
+def mgmt(command, *args):
     """Run syncdb and South migrations."""
 
     require('environment', provided_by=env.environments)
+    env.command = command
+    env.command_args = ' '.join(args)
     with cd(env.project_root):
-        sudo('%(virtualenv_root)s/bin/python manage.py syncdb '
-             '--settings=openrural.local_settings --noinput --migrate' % env,
+        sudo('%(virtualenv_root)s/bin/python manage.py %(command)s '
+             '--settings=openrural.local_settings %(command_args)s' % env,
              user=env.deploy_user)
-
-
-@task
-def create_superuser():
-    """Create a Django superuser."""
-    
-    require('environment', provided_by=env.environments)
-    with cd(env.project_root):
-        sudo('%(virtualenv_root)s/bin/python manage.py createsuperuser '
-             '--settings=openrural.local_settings' % env, user=env.deploy_user)
 
 
 @task
@@ -470,31 +462,6 @@ def deploy():
     require('environment', provided_by=env.environments)
     update_source()
     update_requirements()
-    syncdb()
+    mgmt('syncdb')
     restart_supervisor()
-
-
-@task
-def import_zips():
-    """Import NC zip codes."""
-
-    require('environment', provided_by=env.environments)
-    with cd(env.project_root):
-        sudo('%(virtualenv_root)s/bin/python manage.py import_nc_zips '
-             '--settings=openrural.local_settings' % env, user=env.deploy_user)
-
-
-@task
-def import_streets():
-    """Import NC streets."""
-
-    require('environment', provided_by=env.environments)
-    with cd(env.project_root):
-        sudo('%(virtualenv_root)s/bin/python manage.py import_columbus_county_streets '
-             '--settings=openrural.local_settings' % env, user=env.deploy_user)
-    with cd('/tmp'):
-        sudo('rm -rf tl_2009_37_zcta5.zip zipcodes/')
-        run('wget http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/tl_2009_37_zcta5.zip')
-        run('unzip tl_2009_37_zcta5.zip -d zipcodes')
-        run('PYTHONPATH=%(code_root)s DJANGO_SETTINGS_MODULE=openrural.local_settings %(virtualenv_root)s/bin/import_zips_tiger -v -b zipcodes/' % env)
 
