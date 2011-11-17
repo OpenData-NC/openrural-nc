@@ -87,7 +87,7 @@ You can import these like so::
                           blocks/tl_2009_37047_edges.shp \
                           blocks/tl_2009_37047_featnames.dbf \
                           blocks/tl_2009_37047_faces.dbf \
-                          blocks/tl_2009_37_place.shp\
+                          blocks/tl_2009_37_place.shp
 
 Derive streets and intersections from the blocks data::
 
