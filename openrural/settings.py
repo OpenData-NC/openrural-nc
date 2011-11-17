@@ -13,10 +13,13 @@ DEBUG = True
 TIME_ZONE = 'US/Eastern'
 
 PROJECT_DIR = os.path.normpath(os.path.dirname(__file__))
-INSTALLED_APPS = ('openrural', ) + INSTALLED_APPS 
+INSTALLED_APPS = (
+    'openrural',
+    'gunicorn',
+    'seacucumber',
+) + INSTALLED_APPS
 TEMPLATE_DIRS = (os.path.join(PROJECT_DIR, 'templates'), ) + TEMPLATE_DIRS
 ROOT_URLCONF = 'openrural.urls'
-
 
 DATABASES = {
     'default': {
