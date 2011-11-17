@@ -470,3 +470,14 @@ def deploy():
     update_requirements()
     syncdb()
     restart_supervisor()
+
+
+@task
+def import_zips():
+    """Import NC zip codes. This is temporary and will likely be moved to a management command."""
+    with cd('/tmp'):
+        sudo('rm -rf tl_2009_37_zcta5.zip zipcodes/')
+        run('wget http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/tl_2009_37_zcta5.zip')
+        run('unzip tl_2009_37_zcta5.zip -d zipcodes')
+        run('PYTHONPATH=%(code_root)s DJANGO_SETTINGS_MODULE=openrural.local_settings %(virtualenv_root)s/bin/import_zips_tiger -v -b zipcodes/' % env)
+
