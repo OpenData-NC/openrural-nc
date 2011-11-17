@@ -205,6 +205,21 @@ def create_db():
 
 
 @task
+def reset_db():
+    """Drop and recreate the Postgres database."""
+    
+    if not env.environment == 'staging':
+        abort('reset_db requires the staging environment.')
+    answer = prompt('Are you sure you want to drop and re-create the database?', default='n')
+    if answer == 'y':
+        sudo('dropdb %(database_name)s' % env, user='postgres')
+        create_db()
+        syncdb()
+    else:
+        abort('Aborting...')
+
+
+@task
 def link_config_files():
     """Include the nginx and supervisor config files via the Ubuntu standard inclusion directories"""
 
