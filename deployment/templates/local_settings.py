@@ -1,4 +1,4 @@
-from openrural.settings_whiteville import *
+from openrural.settings_%(deployment_tag)s import *
 
 DEBUG = False
 
