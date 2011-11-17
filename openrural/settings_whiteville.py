@@ -10,7 +10,7 @@ SHORT_NAME = 'whiteville'
 # Where to center citywide maps, eg. on homepage.
 DEFAULT_MAP_CENTER_LON = -78.700562
 DEFAULT_MAP_CENTER_LAT = 34.3389
-DEFAULT_MAP_ZOOM = 12
+DEFAULT_MAP_ZOOM = 13
 
 # Metros. You almost certainly only want one dictionary in this list.
 # See the configuration docs for more info.
