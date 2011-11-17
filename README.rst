@@ -64,3 +64,33 @@ We'll use the U.S. Census Bureau TIGER/Line data for `North Carolina <http://www
     $ wget http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/tl_2009_37_zcta5.zip
     $ unzip tl_2009_37_zcta5.zip -d zipcodes
     $ import_zips_tiger -v -b zipcodes/
+
+Streets
+-------
+
+Now we'll get the block data, including `Columbus County <http://www2.census.gov/cgi-bin/shapefiles2009/county-files?county=37047>`_ data:
+
+* `Place (Current) <http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/tl_2009_37_tabblock.zip>`_
+* `All Lines <http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/37047_Columbus_County/tl_2009_37047_edges.zip>`_
+* `Topological Faces (Polygons With All Geocodes) <http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/37047_Columbus_County/tl_2009_37047_faces.zip>`_
+* `Feature Names Relationship File <http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/37047_Columbus_County/tl_2009_37047_featnames.zip>`_
+
+You can import these like so::
+
+    $ wget http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/tl_2009_37_place.zip \
+           http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/37047_Columbus_County/tl_2009_37047_edges.zip \
+           http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/37047_Columbus_County/tl_2009_37047_faces.zip \
+           http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/37047_Columbus_County/tl_2009_37047_featnames.zip
+    $ unzip -d blocks \*.zip
+    $ import_blocks_tiger --city=WHITEVILLE \
+                          --filter-bounds=1 \
+                          blocks/tl_2009_37047_edges.shp \
+                          blocks/tl_2009_37047_featnames.dbf \
+                          blocks/tl_2009_37047_faces.dbf \
+                          blocks/tl_2009_37_place.shp\
+
+Derive streets and intersections from the blocks data::
+
+    $ populate_streets -v -v -v -v streets
+    $ populate_streets -v -v -v -v block_intersections
+    $ populate_streets -v -v -v -v intersections
