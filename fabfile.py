@@ -459,5 +459,4 @@ def deploy():
     update_source()
     update_requirements()
     syncdb()
-#    collectstatic()
     restart_supervisor()
