@@ -17,7 +17,7 @@ DEFAULT_MAP_ZOOM = 13
 METRO_LIST = (
     {
         # Extent of the region, as a longitude/latitude bounding box.
-        'extent': (-78.602543, 34.296792, -78.796177, 34.391187),
+        'extent': (-79.305094, 34.567047, -78.080075, 33.865161),
 
         # Whether this region should be displayed to the public.
         'is_public': True,

@@ -419,6 +419,16 @@ def syncdb():
 
 
 @task
+def create_superuser():
+    """Create a Django superuser."""
+    
+    require('environment', provided_by=env.environments)
+    with cd(env.project_root):
+        sudo('%(virtualenv_root)s/bin/python manage.py createsuperuser '
+             '--settings=openrural.local_settings' % env, user=env.deploy_user)
+
+
+@task
 def restart_nginx():
     """Restart Nginx."""
 
