@@ -55,3 +55,12 @@ Point Django do your local settings and initialize the database::
 If everything went smoothly, you can now runserver::
 
     $ django-admin.py runserver
+
+Install ZIP codes
+-----------------
+
+We'll use the U.S. Census Bureau TIGER/Line data for `North Carolina <http://www2.census.gov/cgi-bin/shapefiles2009/state-files?state=37>`_, specifially 23MB of 5-Digit ZIP Code Tabulation Area (2002)::
+
+    $ wget http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/tl_2009_37_zcta5.zip
+    $ unzip tl_2009_37_zcta5.zip -d zipcodes
+    $ import_zips_tiger -v -b zipcodes/
