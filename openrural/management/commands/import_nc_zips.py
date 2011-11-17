@@ -27,6 +27,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         
         TMP = tempfile.mkdtemp()
+        print 'Download TIGER data to %s' % TMP
         os.chdir(TMP)
         
         ZIP_SERVER = "http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/"
