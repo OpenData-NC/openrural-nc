@@ -365,6 +365,8 @@ def update_requirements():
                  '--libraries=gdal1.6.0 '
                  '--include-dirs=/usr/include/gdal '
                  'install' % env, user=env.deploy_user)
+    # force reinstallation of OpenBlock every time
+    sudo('pip uninstall -y -E %(virtualenv_root)s ebpub ebdata obadmin' % env)
     for file_name in ['ebpub.txt', 'ebdata.txt', 'obadmin.txt', 'openrural.txt']:
         apps = os.path.join(requirements, file_name)
         cmd = base_cmd + ['--requirement %s' % apps]
@@ -474,7 +476,22 @@ def deploy():
 
 @task
 def import_zips():
-    """Import NC zip codes. This is temporary and will likely be moved to a management command."""
+    """Import NC zip codes."""
+
+    require('environment', provided_by=env.environments)
+    with cd(env.project_root):
+        sudo('%(virtualenv_root)s/bin/python manage.py import_nc_zips '
+             '--settings=openrural.local_settings' % env, user=env.deploy_user)
+
+
+@task
+def import_streets():
+    """Import NC streets."""
+
+    require('environment', provided_by=env.environments)
+    with cd(env.project_root):
+        sudo('%(virtualenv_root)s/bin/python manage.py import_columbus_county_streets '
+             '--settings=openrural.local_settings' % env, user=env.deploy_user)
     with cd('/tmp'):
         sudo('rm -rf tl_2009_37_zcta5.zip zipcodes/')
         run('wget http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/tl_2009_37_zcta5.zip')

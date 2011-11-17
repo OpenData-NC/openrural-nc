@@ -32,7 +32,7 @@ class Command(BaseCommand):
         ZIP_SERVER = "http://www2.census.gov/geo/tiger/TIGER2009/37_NORTH_CAROLINA/"
         ZIP_FILE = "tl_2009_37_zcta5.zip"
         ZIP_URL = "%s/%s" % (ZIP_SERVER, ZIP_FILE)
-        ZIP_FOLDER = os.path.join(HERE, 'zip_data')
+        ZIP_FOLDER = os.path.join(TMP, 'zip_data')
         makedirs(ZIP_FOLDER) or die("couldn't create %s" % ZIP_FOLDER)
 
         print "Downloading zip code data..."
