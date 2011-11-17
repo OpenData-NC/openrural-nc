@@ -44,6 +44,7 @@ class Command(BaseCommand):
         print "Importing zip codes..."
         from ebpub.db.bin import import_zips
         import_zips.main([ZIP_FOLDER, '-v', '-b'])
-        
+
+        print "Removing temp directory %s" % TMP
         os.system('rm -rf %s' % TMP)
 
