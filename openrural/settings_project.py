@@ -41,9 +41,6 @@ DATABASES = {
 # The domain for your site.
 EB_DOMAIN = 'localhost'
 
-# This is the short name for your city, e.g. "chicago".
-SHORT_NAME = 'yourcity'
-
 # Set both of these to distinct, secret strings that include two instances
 # of '%s' each. Example: 'j8#%s%s' -- but don't use that, because it's not
 # secret.  And don't check the result in to a public code repository
@@ -80,54 +77,11 @@ HOMEPAGE_DEFAULT_NEWSTYPES = [u'news-articles']
 # and elsewhere.
 DEFAULT_DAYS = 7
 
-# Where to center citywide maps, eg. on homepage.
-DEFAULT_MAP_CENTER_LON = -71.07
-DEFAULT_MAP_CENTER_LAT = 42.357778
-DEFAULT_MAP_ZOOM = 12
-
 # Edit this if you want to control where
 # scraper scripts will put their HTTP cache.
 # (Warning, don't put it in a directory encrypted with ecryptfs
 # or you'll likely have "File name too long" errors.)
 HTTP_CACHE = '/tmp/openblock_scraper_cache_openrural'
-
-# Metros. You almost certainly only want one dictionary in this list.
-# See the configuration docs for more info.
-METRO_LIST = (
-    {
-        # Extent of the region, as a longitude/latitude bounding box.
-        'extent': (-71.191153, 42.227865, -70.986487, 42.396978),
-
-        # Whether this region should be displayed to the public.
-        'is_public': True,
-
-        # Set this to True if the region has multiple cities.
-        # You will also need to set 'city_location_type'.
-        'multiple_cities': False,
-
-        # The major city in the region.
-        'city_name': 'Your City',
-
-        # The SHORT_NAME in the settings file.
-        'short_name': SHORT_NAME,
-
-        # The name of the region, as opposed to the city (e.g., "Miami-Dade" instead of "Miami").
-        'metro_name': 'Your City',
-
-        # USPS abbreviation for the state.
-        'state': 'ZZ',
-
-        # Full name of state.
-        'state_name': 'Your State',
-
-        # Time zone, as required by Django's TIME_ZONE setting.
-        'time_zone': TIME_ZONE,
-
-        # Slug of an ebpub.db.LocationType that represents cities.
-        # Only needed if multiple_cities = True.
-        'city_location_type': None,
-    },
-)
 
 CACHES = {
     # Use whatever Django cache backend you like;
@@ -141,7 +95,3 @@ CACHES = {
     }
 }
 
-if DEBUG:
-    for _name in required_settings:
-        if not _name in globals():
-            raise NameError("Required setting %r was not defined in settings.py or settings_default.py" % _name)
