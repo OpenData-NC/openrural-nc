@@ -54,4 +54,4 @@ Point Django do your local settings and initialize the database::
 
 If everything went smoothly, you can now runserver::
 
-    $ django-admin.py syncdb --migrate
+    $ django-admin.py runserver
