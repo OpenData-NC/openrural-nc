@@ -1,3 +1,4 @@
+setuptools-git==0.4.2
 ebdata==1.2.0dev
 ebpub==1.2.0dev
 obadmin==1.2.0dev
