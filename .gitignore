@@ -1,3 +1,5 @@
 openrural.egg-info
 openrural/local_settings.py
 *.pyc
+src/
+build/
