@@ -13,6 +13,7 @@ from django.template import defaultfilters as filters
 
 from ebpub import geocoder
 from ebpub.db.models import NewsItem, Schema, SchemaField
+from ebpub.streets.models import ImproperCity
 from ebpub.utils.logutils import log_exception
 from ebpub.utils.script_utils import add_verbosity_options, setup_logging_from_opts
 import ebdata.retrieval.log  # sets up base handlers.
@@ -115,6 +116,9 @@ class RestaurantInspections(BaseScraper):
             self.logger.error(message)
         except geocoder.DoesNotExist, e:
             message = "DoesNotExist: %s" % address
+            self.logger.error(message)
+        except ImproperCity, e:
+            message = "ImproperCity: %s" % address
             self.logger.error(message)
 
     def geocode(self, location_name, zipcode):
