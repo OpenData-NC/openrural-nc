@@ -85,7 +85,6 @@ class RestaurantInspections(BaseScraper):
             reader.next() # skip header
             for row in reader:
                 self.parse_row(row)
-                break
 
     def parse_row(self, row):
         title = filters.title(row[1])
@@ -94,7 +93,7 @@ class RestaurantInspections(BaseScraper):
             'restaurant_id': row[0],
             'restaurant_name': title,
             'status_code': row[8],
-            'score': row[10],
+            'score': int(float(row[10])*100),
             'form_item_id': row[11],
             'form_item_desc': row[12],
             'activity_item_id': row[13],
@@ -115,7 +114,7 @@ class RestaurantInspections(BaseScraper):
             self.logger.error(message)
 
     def geocode(self, location_name, zipcode):
-        print location_name, zipcode
+        pass
 
     def _create_schema(self):
         try:
