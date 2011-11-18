@@ -215,7 +215,7 @@ def reset_db():
     if answer == 'y':
         sudo('dropdb %(database_name)s' % env, user='postgres')
         create_db()
-        syncdb()
+        mgmt('syncdb', '--migrate')
     else:
         abort('Aborting...')
 
