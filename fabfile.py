@@ -426,6 +426,24 @@ def mgmt(command, *args):
 
 
 @task
+def import_locations(type_slug, zip_url):
+    """Import locations of the specified location type from the given URL."""
+
+    require('environment', provided_by=env.environments)
+    locations_dir = '/tmp/fab_location_importer'
+    if files.exists(locations_dir):
+        sudo('rm -rf %s' % locations_dir, user=env.deploy_user)
+    sudo('mkdir %s' % locations_dir, user=env.deploy_user)
+    cmd = 'PYTHONPATH=%(code_root)s '\
+          'DJANGO_SETTINGS_MODULE=openrural.local_settings '\
+          '%(virtualenv_root)s/bin/import_locations' % env
+    with cd(locations_dir):
+        sudo('wget -O locations.zip %s' % zip_url, user=env.deploy_user)
+        sudo('unzip -d locations locations.zip', user=env.deploy_user)
+        sudo(' '.join([cmd, type_slug, 'locations']), user=env.deploy_user)
+
+
+@task
 def restart_nginx():
     """Restart Nginx."""
 
