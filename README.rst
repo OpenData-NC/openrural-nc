@@ -56,8 +56,25 @@ If everything went smoothly, you can now runserver::
 
     $ django-admin.py runserver
 
-Install ZIP codes
------------------
+Importing Zip codes
+-------------------
+
+To import NC zip codes using the provided management command, run::
+
+    $ django-admin.py import_nc_zips
+
+Importing County streets
+------------------------
+
+To import NC county streets using the provided management command, run::
+
+    $ django-admin.py import_county_streets 37047
+
+Where 37047 is the U.S. Census county ID for the county you want to import
+(37047 = Columbus County, NC).
+
+Install ZIP codes Manually
+--------------------------
 
 We'll use the U.S. Census Bureau TIGER/Line data for `North Carolina <http://www2.census.gov/cgi-bin/shapefiles2009/state-files?state=37>`_, specifially 23MB of 5-Digit ZIP Code Tabulation Area (2002)::
 
@@ -65,8 +82,8 @@ We'll use the U.S. Census Bureau TIGER/Line data for `North Carolina <http://www
     $ unzip tl_2009_37_zcta5.zip -d zipcodes
     $ import_zips_tiger -v -b zipcodes/
 
-Streets
--------
+Importing Streets Manually
+--------------------------
 
 Now we'll get the block data, including `Columbus County <http://www2.census.gov/cgi-bin/shapefiles2009/county-files?county=37047>`_ data:
 
