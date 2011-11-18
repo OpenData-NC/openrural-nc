@@ -70,6 +70,7 @@ ESTABLISHMENT_TYPE_CODES = {
 class RestaurantInspections(BaseScraper):
 
     schema_slug = 'restaurant-inspections'
+    geocoder = geocoder.SmartGeocoder()
 
     def __init__(self, *args, **kwargs):
         clear = kwargs.pop('clear', False)
@@ -114,7 +115,8 @@ class RestaurantInspections(BaseScraper):
             self.logger.error(message)
 
     def geocode(self, location_name, zipcode):
-        pass
+        location = self.geocoder.geocode(location_name)
+        return location
 
     def _create_schema(self):
         try:
