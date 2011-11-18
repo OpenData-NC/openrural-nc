@@ -33,14 +33,15 @@ env.repo = u'https://github.com/openrural/openrural-nc.git'
 env.shell = '/bin/bash -c'
 env.placements = ['us-east-1a', 'us-east-1d']
 env.environments = ['staging', 'production']
-env.deployments = ['whiteville',]
+env.deployments = ['whiteville', 'orange']
 env.deployment_dir = os.path.join(os.path.dirname(__file__), 'deployment') 
 env.templates_dir = os.path.join(env.deployment_dir, 'templates')
 env.server_ports = {'staging': 8000, 'production': 8001}
 env.branches = {
     'whiteville': 'master',
+    'orange': 'master',
 }
-env.instance_types = {'staging': 'm1.small', 'production': 'm1.large'}
+env.instance_types = {'staging': 't1.micro', 'production': 'm1.small'}
 
 
 def _get_hosts(deployment, environment):
@@ -366,7 +367,8 @@ def update_requirements():
                  '--include-dirs=/usr/include/gdal '
                  'install' % env, user=env.deploy_user)
     # force reinstallation of OpenBlock every time
-    sudo('pip uninstall -y -E %(virtualenv_root)s ebpub ebdata obadmin' % env)
+    with settings(warn_only=True):
+        sudo('pip uninstall -y -E %(virtualenv_root)s ebpub ebdata obadmin' % env)
     for file_name in ['ebpub.txt', 'ebdata.txt', 'obadmin.txt', 'openrural.txt']:
         apps = os.path.join(requirements, file_name)
         cmd = base_cmd + ['--requirement %s' % apps]
@@ -411,15 +413,16 @@ def update_source():
 
 @task
 def mgmt(command, *args):
-    """Run syncdb and South migrations."""
+    """Run the given management command on the remote server."""
 
     require('environment', provided_by=env.environments)
     env.command = command
     env.command_args = ' '.join(args)
+    cmd = 'PYTHONPATH=%(code_root)s '\
+          'DJANGO_SETTINGS_MODULE=openrural.local_settings '\
+          '%(virtualenv_root)s/bin/django-admin.py %(command)s %(command_args)s' % env
     with cd(env.project_root):
-        sudo('%(virtualenv_root)s/bin/python manage.py %(command)s '
-             '--settings=openrural.local_settings %(command_args)s' % env,
-             user=env.deploy_user)
+        sudo(cmd, user=env.deploy_user)
 
 
 @task
@@ -462,6 +465,6 @@ def deploy():
     require('environment', provided_by=env.environments)
     update_source()
     update_requirements()
-    mgmt('syncdb')
+    mgmt('syncdb', '--migrate')
     restart_supervisor()
 
