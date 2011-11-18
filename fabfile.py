@@ -144,7 +144,8 @@ def update_sysadmin_users():
     
     require('environment', provided_by=env.environments)
     servers = ec2_instances(filters=env.filters, cls=OpenRuralWebInstance,
-                            inst_kwargs={'deploy_user': env.deploy_user})
+                            inst_kwargs={'deploy_user': env.deploy_user,
+                                         'instance_type': env.instance_type})
     for server in servers:
         server.create_users()
         server.update_deployer_keys()
