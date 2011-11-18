@@ -102,17 +102,17 @@ class RestaurantInspections(BaseScraper):
         }
         address = "%s, %s, %s %s" % (filters.title(row[3]),
                                      filters.title(row[4]), row[5], row[6])
-        try: 
-            self.create_newsitem(
-                attrs,
-                title=title,
-                item_date=item_date,
-                location_name=address,
-                zipcode=row[6],
-            )
-        except:
-            message = "Error storing inspection for %s: %s" % (row,traceback.format_exc())
-            self.logger.error(message)
+        # try: 
+        self.create_newsitem(
+            attrs,
+            title=title,
+            item_date=item_date,
+            location_name=address,
+            zipcode=row[6],
+        )
+        # except:
+        #     message = "Error storing inspection for %s: %s" % (row,traceback.format_exc())
+        #     self.logger.error(message)
 
     def geocode(self, location_name, zipcode):
         location = self.geocoder.geocode(location_name)
