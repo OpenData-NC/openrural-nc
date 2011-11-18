@@ -24,7 +24,7 @@ METRO_LIST = (
 
         # Set this to True if the region has multiple cities.
         # You will also need to set 'city_location_type'.
-        'multiple_cities': False,
+        'multiple_cities': True,
 
         # The major city in the region.
         'city_name': 'Whiteville',
@@ -33,7 +33,7 @@ METRO_LIST = (
         'short_name': SHORT_NAME,
 
         # The name of the region, as opposed to the city (e.g., "Miami-Dade" instead of "Miami").
-        'metro_name': 'Whiteville',
+        'metro_name': 'Columbus County',
 
         # USPS abbreviation for the state.
         'state': 'NC',
@@ -46,7 +46,7 @@ METRO_LIST = (
 
         # Slug of an ebpub.db.LocationType that represents cities.
         # Only needed if multiple_cities = True.
-        'city_location_type': None,
+        'city_location_type': 'cities',
     },
 )
 
