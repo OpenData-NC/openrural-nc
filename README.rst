@@ -73,6 +73,26 @@ To import NC county streets using the provided management command, run::
 Where 37047 is the U.S. Census county ID for the county you want to import
 (37047 = Columbus County, NC).
 
+Orange County, North Carolina
+-----------------------------
+
+For example, to import data for Orange County::
+
+  $ django-admin.py import_nc_zips
+  $ django-admin.py import_county_streets 37047
+  $ django-admin.py import_location_zip http://web.co.orange.nc.us/gisdownloads/city.zip
+  $ wget http://web.co.orange.nc.us/gisdownloads/city.zip -O city.zip; \
+    unzip -d city city.zip; \
+    rm city.zip; \
+    import_locations --type-name=City --type-name-plural=Cities cities ./city/; \
+    rm -rf ./city
+  $ wget http://web.co.orange.nc.us/gisdownloads/townships.zip -O townships.zip; \
+    unzip -d townships townships.zip; \
+    rm townships.zip; \
+    import_locations --type-name=Township --type-name-plural=Townships townships ./townships/; \
+    rm -rf ./townships
+
+
 Install ZIP codes Manually
 --------------------------
 
