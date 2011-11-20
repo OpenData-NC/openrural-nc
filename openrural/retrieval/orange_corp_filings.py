@@ -29,6 +29,7 @@ SCHEMA_SLUG = 'corporations'
 class Scraper(BaseScraper):
 
     geocoder = geocoder.SmartGeocoder()
+    logname = 'corporation'
 
     def __init__(self, *args, **kwargs):
         clear = kwargs.pop('clear', False)
@@ -37,6 +38,7 @@ class Scraper(BaseScraper):
             self._create_schema()
         self.schema = Schema.objects.get(slug=SCHEMA_SLUG)
         self.num_added = 0
+        self.num_total = 0
 
     def update(self, filename):
         with open(filename, 'rb') as f:
@@ -44,6 +46,9 @@ class Scraper(BaseScraper):
             reader.next() # skip header
             for row in reader:
                 self.parse_row(row)
+                self.num_total += 1
+        self.logger.info('Added {0} of {1}'.format(self.num_added,
+                                                   self.num_total))
 
     def parse_row(self, row):
         date, time = row[1].split(' ', 1)
