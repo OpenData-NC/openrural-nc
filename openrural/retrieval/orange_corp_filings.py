@@ -75,8 +75,7 @@ class Scraper(BaseScraper):
                 location_name=address,
                 zipcode=address_parts['zip'],
             )
-        except (geocoder.InvalidBlockButValidStreet, geocoder.DoesNotExist,
-                geocoder.ParsingError, geocoder.AmbiguousResult,
+        except (geocoder.GeocodingException, geocoder.ParsingError,
                 ImproperCity) as e:
             message = "{0} - {1}".format(type(e).__name__, e)
             self.logger.error(message)
