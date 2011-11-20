@@ -94,7 +94,6 @@ class Scraper(BaseScraper):
             Schema.objects.get(slug=SCHEMA_SLUG).delete()
         except Schema.DoesNotExist:
             pass
-        NewsItem.objects.all().delete()
         schema = Schema.objects.create(
             name='Corporation',
             plural_name='corporations',
