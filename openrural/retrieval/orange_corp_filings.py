@@ -28,7 +28,7 @@ SCHEMA_SLUG = 'corporations'
 
 class Scraper(BaseScraper):
 
-    geocoder = geocoder.SmartGeocoder()
+    geocoder = geocoder.AddressGeocoder()
     logname = 'corporation'
 
     def __init__(self, *args, **kwargs):
