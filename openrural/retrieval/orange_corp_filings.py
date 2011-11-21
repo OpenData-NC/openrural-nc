@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
+import re
 import sys
 import csv
+import urllib
+import urllib2
 import datetime
 import traceback
 from optparse import OptionParser
+
+from BeautifulSoup import BeautifulSoup, SoupStrainer
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
@@ -30,6 +35,7 @@ class Scraper(BaseScraper):
 
     geocoder = geocoder.AddressGeocoder()
     logname = 'corporation'
+    url = 'http://www.secretary.state.nc.us/Corporations/SearchChgs.aspx'
 
     def __init__(self, *args, **kwargs):
         clear = kwargs.pop('clear', False)
@@ -39,6 +45,25 @@ class Scraper(BaseScraper):
         self.schema = Schema.objects.get(slug=SCHEMA_SLUG)
         self.num_added = 0
         self.num_total = 0
+
+    def post(self, county, from_date, to_date):
+        """ Scrape secretary site for download file -- not working yet """
+        # first get the initial page and serialize all form elements
+        f = urllib2.urlopen(self.url)
+        self.logger.debug('Grabbing initial page to serialize form elements')
+        soup = BeautifulSoup(f.read())
+        data = {}
+        for tag in soup.findAll("input"):
+            data[tag.get("name")] = tag.get("value")
+        # update the POST data with the needed filter values
+        data.update({'County': county, 'From': from_date, 'To': to_date})
+        # POST the data and look for a .txt href extension
+        f = urllib2.urlopen(self.url, urllib.urlencode(data))
+        self.logger.debug('Submitting form and searching for download file')
+        soup = BeautifulSoup(f.read())
+        anchor = soup.find(href=re.compile("\.txt$"))
+        href = anchor.get('href')
+        self.logger.debug('Found download file: {0}'.format(href))
 
     def update(self, filename):
         with open(filename, 'rb') as f:
