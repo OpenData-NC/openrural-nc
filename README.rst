@@ -79,7 +79,7 @@ Orange County, North Carolina
 For example, to import data for Orange County::
 
   $ django-admin.py import_nc_zips
-  $ django-admin.py import_county_streets 37047
+  $ django-admin.py import_county_streets 37135
   $ django-admin.py import_location_zip http://web.co.orange.nc.us/gisdownloads/city.zip
   $ wget http://web.co.orange.nc.us/gisdownloads/city.zip -O city.zip; \
     unzip -d city city.zip; \
