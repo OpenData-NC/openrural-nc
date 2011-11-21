@@ -32,6 +32,16 @@ SCHEMA_SLUG = 'corporations'
 
 
 class Scraper(BaseScraper):
+    """
+    Import corporations from NC Secretary of State website
+
+    Visit http://www.secretary.state.nc.us/Corporations/SearchChgs.aspx
+    Fill out form:
+        From: 10/1/2011
+        County: Orange
+    Click Download Corporations List
+    Download CSV by clicking "Click Here To Download Text Only" on next page
+    """
 
     geocoder = geocoder.AddressGeocoder()
     logname = 'corporation'
