@@ -35,12 +35,15 @@ class Scraper(BaseScraper):
     """
     Import corporations from NC Secretary of State website
 
+    Example Usage:
+
     Visit http://www.secretary.state.nc.us/Corporations/SearchChgs.aspx
     Fill out form:
         From: 10/1/2011
         County: Orange
     Click Download Corporations List
     Download CSV by clicking "Click Here To Download Text Only" on next page
+    ./orange_corp_filings.py -vvv -c <download-file>.txt
     """
 
     geocoder = geocoder.AddressGeocoder()
