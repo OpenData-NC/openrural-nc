@@ -3,6 +3,8 @@
 import re
 import sys
 import csv
+import json
+import urlparse
 import urllib
 import urllib2
 import datetime
@@ -28,84 +30,104 @@ from ebdata.retrieval.scrapers.base import BaseScraper
 from ebdata.retrieval.utils import convert_entities
 
 
+from ebdata.retrieval.scrapers.newsitem_list_detail import NewsItemListDetailScraper
+
+
 SCHEMA_SLUG = 'corporations'
 
 
-class Scraper(BaseScraper):
-    """
-    Import corporations from NC Secretary of State website
+class ScraperWiki(NewsItemListDetailScraper):
 
-    Example Usage:
-
-    Visit http://www.secretary.state.nc.us/Corporations/SearchChgs.aspx
-    Fill out form:
-        From: 10/1/2011
-        County: Orange
-    Click Download Corporations List
-    Download CSV by clicking "Click Here To Download Text Only" on next page
-    ./orange_corp_filings.py -vvv -c <download-file>.txt
-    """
-
-    geocoder = geocoder.AddressGeocoder()
-    logname = 'corporation'
-    url = 'http://www.secretary.state.nc.us/Corporations/SearchChgs.aspx'
+    url = "https://api.scraperwiki.com/api/1.0/datastore/sqlite"
+    list_filter = None
+    ordering = None
+    limit = 50
 
     def __init__(self, *args, **kwargs):
         clear = kwargs.pop('clear', False)
-        super(Scraper, self).__init__(*args, **kwargs)
+        super(ScraperWiki, self).__init__(*args, **kwargs)
         if clear:
             self._create_schema()
-        self.schema = Schema.objects.get(slug=SCHEMA_SLUG)
         self.num_added = 0
         self.num_total = 0
 
-    def post(self, county, from_date, to_date):
-        """ Scrape secretary site for download file -- not working yet """
-        # first get the initial page and serialize all form elements
-        f = urllib2.urlopen(self.url)
-        self.logger.debug('Grabbing initial page to serialize form elements')
-        soup = BeautifulSoup(f.read())
-        data = {}
-        for tag in soup.findAll("input"):
-            data[tag.get("name")] = tag.get("value")
-        # update the POST data with the needed filter values
-        data.update({'County': county, 'From': from_date, 'To': to_date})
-        # POST the data and look for a .txt href extension
-        f = urllib2.urlopen(self.url, urllib.urlencode(data))
-        self.logger.debug('Submitting form and searching for download file')
-        soup = BeautifulSoup(f.read())
-        anchor = soup.find(href=re.compile("\.txt$"))
-        href = anchor.get('href')
-        self.logger.debug('Found download file: {0}'.format(href))
+    def get_query(self, select='*', limit=10, offset=0):
+        where = ''
+        if self.list_filter:
+            parts = []
+            for key, val in self.list_filter.iteritems():
+                parts.append("{0} = '{1}'".format(key, val))
+            where = ' AND '.join(parts)
+        query = ['SELECT {0} FROM `swdata`'.format(select)]
+        if where:
+            query.append('WHERE {0}'.format(where))
+        if self.ordering:
+            query.append('ORDER BY {0}'.format(self.ordering))
+        if offset > 0:
+            query.append('OFFSET {0}'.format(offset))
+        if limit > 0:
+            query.append('LIMIT {0}'.format(limit))
+        query = ' '.join(query)
+        self.logger.debug(query)
+        return query
 
-    def update(self, filename):
-        with open(filename, 'rb') as f:
-            reader = csv.reader(f, delimiter='\t')
-            reader.next() # skip header
-            for row in reader:
-                self.parse_row(row)
-                self.num_total += 1
-        self.logger.info('Added {0} of {1}'.format(self.num_added,
-                                                   self.num_total))
+    def get_url(self, query):
+        args = {'name': self.scraper_name, "format": "jsondict",
+                "query": query}
+        url = "{0}?{1}".format(self.url, urllib.urlencode(args))
+        return self.get_html(url)
 
-    def parse_row(self, row):
-        date, time = row[1].split(' ', 1)
+    def count(self):
+        query = self.get_query(select='COUNT(*) AS count', limit=0, offset=0)
+        data = json.loads(self.get_url(query=query))[0]
+        return data['count']
+
+    def list_pages(self):
+        count = self.count()
+        offset = 0
+        while offset < count:
+            yield self.get_url(query=self.get_query(offset=offset))
+
+    def parse_list(self, data):
+        for row in json.loads(data):
+            yield row
+
+    def existing_record(self, record):
+        try:
+            qs = NewsItem.objects.filter(schema__id=self.schema.id)
+            qs = qs.by_attribute(self.schema_fields['sosid'], record['SOSID'])
+            return qs[0]
+        except IndexError:
+            return None
+
+
+class Scraper(ScraperWiki):
+
+    scraper_name = "nc_secretary_of_state_corporation_filings"
+    list_filter = {'Status': 'Current-Active', 'PrinCounty': 'Orange'}
+    ordering = 'DateFormed DESC'
+
+    schema_slugs = ('corporations',)
+    has_detail = False
+
+    def save(self, old_record, data, detail_record):
+        date, time = data['DateFormed'].split(' ', 1)
         item_date = datetime.datetime.strptime(date, "%m/%d/%Y")
         attrs = {
-            'citizenship': row[2],
-            'type': row[3],
-            'sosid': row[5],
-            'agent': row[6],
+            'citizenship': data['Citizenship'],
+            'type': data['Type'],
+            'sosid': data['SOSID'],
+            'agent': data['RegAgent'],
         }
         address_parts = {
-            'line1': row[14],
-            'line2': row[15],
-            'city': row[16],
-            'state': row[17],
-            'zip': row[18],
+            'line1': data['PrinAddr1'],
+            'line2': data['PrinAddr2'],
+            'city': data['PrinCity'],
+            'state': data['PrinState'],
+            'zip': data['PrinZip'],
         }
         if address_parts['line1'] == 'None':
-            self.logger.debug("{0} has no address, skipping".format(*row))
+            self.logger.debug("{0} has no address, skipping".format(*data))
             return
         if address_parts['line2']:
             address_parts['line1'] = address_parts['line2']
@@ -113,7 +135,7 @@ class Scraper(BaseScraper):
         try: 
             self.create_newsitem(
                 attrs,
-                title=row[0],
+                title=data['CorpName'],
                 item_date=item_date,
                 location_name=address,
                 zipcode=address_parts['zip'],
@@ -122,10 +144,6 @@ class Scraper(BaseScraper):
                 ImproperCity) as e:
             message = "{0} - {1}".format(type(e).__name__, e)
             self.logger.error(message)
-
-    def geocode(self, location_name, zipcode):
-        location = self.geocoder.geocode(location_name)
-        return location
 
     def _create_schema(self):
         try:
@@ -179,10 +197,7 @@ def main():
     opts, args = parser.parse_args(sys.argv)
     scraper = Scraper(clear=opts.clear)
     setup_logging_from_opts(opts, scraper.logger)
-    if len(args) != 2:
-        parser.error("Please specify a CSV file to import")
-    filename = args[1]
-    scraper.update(filename)
+    scraper.update()
 
 
 if __name__ == '__main__':
