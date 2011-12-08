@@ -5,7 +5,7 @@ import datetime
 from optparse import OptionParser
 
 from ebpub import geocoder
-from ebpub.db.models import NewsItem, Schema, SchemaField
+from ebpub.db.models import NewsItem, Schema, SchemaField, Lookup
 from ebpub.streets.models import ImproperCity
 from ebpub.utils.script_utils import add_verbosity_options, setup_logging_from_opts
 import ebdata.retrieval.log  # sets up base handlers.
@@ -15,59 +15,48 @@ import ebdata.retrieval.log  # sets up base handlers.
 
 from openrural.retrieval.scraperwiki import ScraperWikiScraper
 
-SCHEMA_SLUG = 'corporations'
-
+SCHEMA_SLUG = 'police_reports'
 
 class Scraper(ScraperWikiScraper):
 
-    scraper_name = "nc_secretary_of_state_corporation_filings"
-    list_filter = {'Status': 'Current-Active', 'PrinCounty': 'Orange'}
-    ordering = 'DateFormed DESC'
+    scraper_name = "chapel_hill_police_reports"
+    list_filter = {}
+    ordering = 'date DESC'
 
-    schema_slugs = ('corporations',)
+    schema_slugs = [SCHEMA_SLUG]
     has_detail = False
+
+    def _parse_date(self, date_):
+        return datetime.datetime.strptime(date_, '%Y-%m-%dT%H:%M:%S')
 
     def save(self, old_record, data, detail_record):
         if old_record is not None:
             return # We already have this inspection.
-        date, time = data['DateFormed'].split(' ', 1)
-        item_date = datetime.datetime.strptime(date, "%m/%d/%Y")
-        attrs = {
-            'citizenship': data['Citizenship'],
-            'type': data['Type'],
-            'sosid': data['SOSID'],
-            'agent': data['RegAgent'],
-        }
-        address_parts = {
-            'line1': data['PrinAddr1'],
-            'line2': data['PrinAddr2'],
-            'city': data['PrinCity'],
-            'state': data['PrinState'],
-            'zip': data['PrinZip'],
-        }
-        if address_parts['line1'] == 'None':
+        item_date = self._parse_date(data['date'])
+        if not data['location']:
             self.logger.debug("{0} has no address, skipping".format(*data))
             return
-        if address_parts['line2']:
-            address_parts['line1'] = address_parts['line2']
-        address = "{line1} {line2}".format(**address_parts)
-        try: 
-            self.create_newsitem(
-                attrs,
-                title=data['CorpName'],
-                item_date=item_date,
-                location_name=address,
-                zipcode=address_parts['zip'],
-            )
-        except (geocoder.GeocodingException, geocoder.ParsingError,
-                ImproperCity) as e:
-            message = "{0} - {1}".format(type(e).__name__, e)
-            self.logger.error(message)
+        title = data['incident_type']
+        # try to find a more specific title, if available:
+        for var in ['charge', 'primary_offense']:
+            if data[var]:
+                title = data[var]
+                break
+        data['incident_type'] = Lookup.objects.get_or_create_lookup(self.schema_fields['incident_type'], data['incident_type']).pk
+        self.create_newsitem(
+            data,
+            title=title,
+            item_date=item_date,
+            location_name=data['location'],
+            state='NC',
+            city='Chapel Hill',
+        )
 
     def existing_record(self, record):
         try:
             qs = NewsItem.objects.filter(schema__id=self.schema.id)
-            qs = qs.by_attribute(self.schema_fields['sosid'], record['SOSID'])
+            date = self._parse_date(record['date'])
+            qs = qs.by_attribute(self.schema_fields['date'], date)
             return qs[0]
         except IndexError:
             return None
@@ -78,8 +67,8 @@ class Scraper(ScraperWikiScraper):
         except Schema.DoesNotExist:
             pass
         schema = Schema.objects.create(
-            name='Corporation',
-            plural_name='corporations',
+            name='Police Report',
+            plural_name='police reports',
             slug=SCHEMA_SLUG,
             last_updated=datetime.datetime.now(),
             is_public=True,
@@ -88,31 +77,47 @@ class Scraper(ScraperWikiScraper):
         )
         SchemaField.objects.create(
             schema=schema,
-            pretty_name="Type",
-            pretty_name_plural="Types",
+            pretty_name="Incident Type",
+            pretty_name_plural="Incident Types",
             real_name='varchar01',
-            name='type',
+            name='incident_type',
+            is_lookup=True,
+            is_filter=True,
         )
         SchemaField.objects.create(
             schema=schema,
-            pretty_name="Registered Agent",
-            pretty_name_plural="Registered Agents",
+            pretty_name="Charge",
+            pretty_name_plural="Charges",
             real_name='varchar02',
-            name='agent',
+            name='charge',
         )
         SchemaField.objects.create(
             schema=schema,
-            pretty_name="Citizenship",
-            pretty_name_plural="Citizenships",
+            pretty_name="Arrestee",
+            pretty_name_plural="Arrestees",
             real_name='varchar03',
-            name='citizenship',
+            name='arrestee',
         )
         SchemaField.objects.create(
             schema=schema,
-            pretty_name="SOSID",
-            pretty_name_plural="SOSIDs",
+            pretty_name="Primary Offense",
+            pretty_name_plural="Primary Offenses",
+            real_name='varchar04',
+            name='primary_offense',
+        )
+        SchemaField.objects.create(
+            schema=schema,
+            pretty_name="Case Number",
+            pretty_name_plural="Case Numbers",
             real_name='int01',
-            name='sosid',
+            name='case_num',
+        )
+        SchemaField.objects.create(
+            schema=schema,
+            pretty_name="Date and Time",
+            pretty_name_plural="Date and Times",
+            real_name='datetime01',
+            name='date',
         )
 
 
