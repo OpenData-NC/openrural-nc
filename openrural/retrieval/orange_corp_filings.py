@@ -63,10 +63,10 @@ class ScraperWiki(NewsItemListDetailScraper):
             query.append('WHERE {0}'.format(where))
         if self.ordering:
             query.append('ORDER BY {0}'.format(self.ordering))
-        if offset > 0:
-            query.append('OFFSET {0}'.format(offset))
         if limit > 0:
             query.append('LIMIT {0}'.format(limit))
+        if offset > 0:
+            query.append('OFFSET {0}'.format(offset))
         query = ' '.join(query)
         self.logger.debug(query)
         return query
@@ -86,7 +86,8 @@ class ScraperWiki(NewsItemListDetailScraper):
         count = self.count()
         offset = 0
         while offset < count:
-            yield self.get_url(query=self.get_query(offset=offset))
+            yield self.get_url(query=self.get_query(limit=self.limit, offset=offset))
+            offset += self.limit
 
     def parse_list(self, data):
         for row in json.loads(data):
@@ -111,6 +112,8 @@ class Scraper(ScraperWiki):
     has_detail = False
 
     def save(self, old_record, data, detail_record):
+        if old_record is not None:
+            return # We already have this inspection.
         date, time = data['DateFormed'].split(' ', 1)
         item_date = datetime.datetime.strptime(date, "%m/%d/%Y")
         attrs = {
