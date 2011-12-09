@@ -28,6 +28,8 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
             self._create_schema()
         self.num_added = 0
         self.num_total = 0
+        self.num_geocode = 0
+        self.num_geocode_success = 0
 
     def get_query(self, select='*', limit=10, offset=0):
         where = ''
@@ -72,12 +74,17 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
         for row in json.loads(data):
             yield row
 
+    def update(self):
+        super(ScraperWikiScraper, self).update()
+        geocode_rate = float(self.num_geocode_success) / self.num_geocode
+        self.logger.info('Geocode success rate {:.2%}'.format(geocode_rate))
+
     def geocode(self, location_name, zipcode=None):
         """
         Tries to geocode the given location string, returning a Point object
         or None.
         """
-
+        self.num_geocode += 1
         # Try to lookup the adress, if it is ambiguous, attempt to use
         # any provided zipcode information to resolve the ambiguity.
         # The zipcode is not included in the initial pass because it
@@ -85,7 +92,9 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
         # legitimate nearby zipcode identified in either the address
         # or street number data.
         try:
-            return self._geocoder.geocode(location_name)
+            loc = self._geocoder.geocode(location_name)
+            self.num_geocode_success += 1
+            return loc
         except AmbiguousResult as result:
             # try to resolve based on zipcode...
             if zipcode is None:
@@ -114,4 +123,5 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
                 zipcode=zipcode or '',
                 description=traceback.format_exc(),
             )
+            self.logger.error(unicode(e))
             return None
