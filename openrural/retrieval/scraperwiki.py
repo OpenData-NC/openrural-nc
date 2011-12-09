@@ -3,9 +3,14 @@ import json
 import urllib
 import urllib2
 import logging
+import traceback
 
 import ebdata.retrieval.log  # sets up base handlers.
 from ebdata.retrieval.scrapers.newsitem_list_detail import NewsItemListDetailScraper
+from ebpub.geocoder import GeocodingException, ParsingError, AmbiguousResult
+from ebpub.streets.models import ImproperCity
+
+from openrural.error_log.models import Error as ScraperError
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -66,3 +71,47 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
     def parse_list(self, data):
         for row in json.loads(data):
             yield row
+
+    def geocode(self, location_name, zipcode=None):
+        """
+        Tries to geocode the given location string, returning a Point object
+        or None.
+        """
+
+        # Try to lookup the adress, if it is ambiguous, attempt to use
+        # any provided zipcode information to resolve the ambiguity.
+        # The zipcode is not included in the initial pass because it
+        # is often too picky yeilding no results when there is a
+        # legitimate nearby zipcode identified in either the address
+        # or street number data.
+        try:
+            return self._geocoder.geocode(location_name)
+        except AmbiguousResult as result:
+            # try to resolve based on zipcode...
+            if zipcode is None:
+                self.logger.info(
+                    "Ambiguous results for address %s. (no zipcode to resolve dispute)" %
+                    (location_name, ))
+                return None
+            in_zip = [r for r in result.choices if r['zip'] == zipcode]
+            if len(in_zip) == 0:
+                self.logger.info(
+                    "Ambiguous results for address %s, but none in specified zipcode %s" %
+                    (location_name, zipcode))
+                return None
+            elif len(in_zip) > 1:
+                self.logger.info(
+                    "Ambiguous results for address %s in zipcode %s, guessing first." %
+                    (location_name, zipcode))
+                return in_zip[0]
+            else:
+                return in_zip[0]
+        except (GeocodingException, ParsingError, ImproperCity) as e:
+            ScraperError.objects.create(
+                scraper=self.schema_slugs[0],
+                name=type(e).__name__,
+                location=location_name,
+                zipcode=zipcode or '',
+                description=traceback.format_exc(),
+            )
+            return None

@@ -15,6 +15,7 @@ TIME_ZONE = 'US/Eastern'
 PROJECT_DIR = os.path.normpath(os.path.dirname(__file__))
 INSTALLED_APPS = (
     'openrural',
+    'openrural.error_log',
     'gunicorn',
     'seacucumber',
 ) + INSTALLED_APPS
