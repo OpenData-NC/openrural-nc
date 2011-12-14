@@ -22,7 +22,7 @@ class Scraper(ScraperWikiScraper):
 
     scraper_name = "nc_secretary_of_state_corporation_filings"
     list_filter = {'Status': 'Current-Active', 'PrinCounty': 'Orange'}
-    ordering = 'DateFormed DESC'
+    ordering = 'DateFormed ASC'
 
     schema_slugs = ('corporations',)
     has_detail = False
@@ -51,18 +51,13 @@ class Scraper(ScraperWikiScraper):
         if address_parts['line2']:
             address_parts['line1'] = address_parts['line2']
         address = "{line1} {line2}".format(**address_parts)
-        try: 
-            self.create_newsitem(
-                attrs,
-                title=data['CorpName'],
-                item_date=item_date,
-                location_name=address,
-                zipcode=address_parts['zip'],
-            )
-        except (geocoder.GeocodingException, geocoder.ParsingError,
-                ImproperCity) as e:
-            message = "{0} - {1}".format(type(e).__name__, e)
-            self.logger.error(message)
+        item = self.create_newsitem(
+            attrs,
+            title=data['CorpName'],
+            item_date=item_date,
+            location_name=address,
+            zipcode=address_parts['zip'],
+        )
 
     def existing_record(self, record):
         try:
