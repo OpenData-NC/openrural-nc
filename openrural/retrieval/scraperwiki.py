@@ -3,6 +3,7 @@ import json
 import urllib
 import urllib2
 import logging
+import datetime
 import traceback
 
 import ebdata.retrieval.log  # sets up base handlers.
@@ -10,9 +11,11 @@ from ebdata.retrieval.scrapers.newsitem_list_detail import NewsItemListDetailScr
 from ebpub.geocoder import GeocodingException, ParsingError, AmbiguousResult
 from ebpub.streets.models import ImproperCity
 
-from openrural.error_log.models import Error as ScraperError
+from openrural.error_log import models as error_log
+
 
 logging.getLogger().setLevel(logging.DEBUG)
+
 
 class ScraperWikiScraper(NewsItemListDetailScraper):
 
@@ -26,10 +29,12 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
         super(ScraperWikiScraper, self).__init__(*args, **kwargs)
         if clear:
             self._create_schema()
+        # these are incremented by NewsItemListDetailScraper
         self.num_added = 0
-        self.num_total = 0
-        self.num_geocode = 0
-        self.num_geocode_success = 0
+        self.num_changed = 0
+        self.num_skipped = 0
+        self.batch = \
+            error_log.Batch.objects.create(scraper=self.schema_slugs[0])
 
     def get_query(self, select='*', limit=10, offset=0):
         where = ''
@@ -72,19 +77,23 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
 
     def parse_list(self, data):
         for row in json.loads(data):
+            self.batch.num += 1
             yield row
 
     def update(self):
         super(ScraperWikiScraper, self).update()
-        geocode_rate = float(self.num_geocode_success) / self.num_geocode
-        self.logger.info('Geocode success rate {:.2%}'.format(geocode_rate))
+        self.batch.end_time = datetime.datetime.now()
+        self.batch.num_added = self.num_added
+        self.batch.num_changed = self.num_changed
+        self.batch.num_skipped = self.num_skipped
+        self.batch.save()
 
     def geocode(self, location_name, zipcode=None):
         """
         Tries to geocode the given location string, returning a Point object
         or None.
         """
-        self.num_geocode += 1
+        self.batch.num_geocoded += 1
         # Try to lookup the adress, if it is ambiguous, attempt to use
         # any provided zipcode information to resolve the ambiguity.
         # The zipcode is not included in the initial pass because it
@@ -93,7 +102,7 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
         # or street number data.
         try:
             loc = self._geocoder.geocode(location_name)
-            self.num_geocode_success += 1
+            self.batch.num_geocoded_success += 1
             return loc
         except AmbiguousResult as result:
             # try to resolve based on zipcode...
@@ -116,7 +125,7 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
             else:
                 return in_zip[0]
         except (GeocodingException, ParsingError, ImproperCity) as e:
-            ScraperError.objects.create(
+            self.batch.errors.create(
                 scraper=self.schema_slugs[0],
                 name=type(e).__name__,
                 location=location_name,
