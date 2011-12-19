@@ -30,8 +30,8 @@ class Scraper(ScraperWikiScraper):
     def save(self, old_record, data, detail_record):
         if old_record is not None:
             return # We already have this inspection.
-        date, time = data['DateFormed'].split(' ', 1)
-        item_date = datetime.datetime.strptime(date, "%m/%d/%Y")
+        date, time = data['DateFormed'].split('T', 1)
+        item_date = datetime.datetime.strptime(date, "%Y-%m-%d")
         attrs = {
             'citizenship': data['Citizenship'],
             'type': data['Type'],
