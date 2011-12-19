@@ -23,6 +23,7 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
     list_filter = None
     ordering = None
     limit = 50
+    geocoder_type = 'openblock'
 
     def __init__(self, *args, **kwargs):
         clear = kwargs.pop('clear', False)
@@ -35,6 +36,9 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
         self.num_skipped = 0
         self.batch = \
             error_log.Batch.objects.create(scraper=self.schema_slugs[0])
+        if self.geocoder_type == 'google':
+            from openrural.retrieval.geocoders import GoogleGeocoder
+            self._geocoder = GoogleGeocoder()
 
     def get_query(self, select='*', limit=10, offset=0):
         where = ''
