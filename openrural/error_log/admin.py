@@ -16,7 +16,7 @@ class BatchAdmin(admin.ModelAdmin):
             rate = float(obj.num_geocoded_success) / obj.num_geocoded
         else:
             rate = 0.0
-        return '{:.2%}'.format(rate)
+        return '{0:.2%}'.format(rate)
 
 admin.site.register(Batch, BatchAdmin)
 
