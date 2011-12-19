@@ -28,9 +28,6 @@ class Scraper(ScraperWikiScraper):
     has_detail = False
 
     def save(self, old_record, data, detail_record):
-        if old_record is not None:
-            self.num_skipped += 1
-            return # We already have this inspection.
         date, time = data['DateFormed'].split('T', 1)
         item_date = datetime.datetime.strptime(date, "%Y-%m-%d")
         attrs = {
@@ -52,12 +49,12 @@ class Scraper(ScraperWikiScraper):
         if address_parts['line2']:
             address_parts['line1'] = address_parts['line2']
         address = "{line1} {line2}".format(**address_parts)
-        item = self.create_newsitem(
+        item = self.create_or_update(
+            old_record,
             attrs,
             title=data['CorpName'],
             item_date=item_date,
             location_name=address,
-            zipcode=address_parts['zip'],
         )
 
     def existing_record(self, record):
