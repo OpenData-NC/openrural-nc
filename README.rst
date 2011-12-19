@@ -24,7 +24,7 @@ Clone Open Rural::
 
 Create a new virtualenv and install the Open Rural packages::
 
-    $ mkvirtualenv --distribute openrural
+    $ mkvirtualenv --distribute -p python2.6 openrural
     $ pip install -r requirements/deploy.txt
     $ pip install --no-index --find-links=file:$PWD/requirements/sdists/ -r requirements/ebdata.txt
     $ pip install --no-index --find-links=file:$PWD/requirements/sdists/ -r requirements/ebpub.txt
