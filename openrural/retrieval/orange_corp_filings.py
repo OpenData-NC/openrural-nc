@@ -29,6 +29,7 @@ class Scraper(ScraperWikiScraper):
 
     def save(self, old_record, data, detail_record):
         if old_record is not None:
+            self.num_skipped += 1
             return # We already have this inspection.
         date, time = data['DateFormed'].split('T', 1)
         item_date = datetime.datetime.strptime(date, "%Y-%m-%d")
