@@ -1,5 +1,7 @@
 from django.db import models
 
+from ebpub.db.models import NewsItem
+
 
 class Batch(models.Model):
     scraper = models.CharField(max_length=255, db_index=True)
@@ -19,14 +21,17 @@ class Batch(models.Model):
         return "{0} ({1})".format(self.scraper, self.id)
 
 
-class Error(models.Model):
-    batch = models.ForeignKey(Batch, related_name='errors')
+class Geocode(models.Model):
+    batch = models.ForeignKey(Batch, related_name='geocodes')
+    news_item = models.ForeignKey(NewsItem, related_name='geocodes', null=True,
+                                  blank=True)
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     scraper = models.CharField(max_length=255, db_index=True)
-    name = models.CharField(max_length=255, db_index=True)
     location = models.CharField(max_length=1024)
     zipcode = models.CharField(max_length=16, blank=True)
-    description = models.TextField()
+    success = models.BooleanField(default=True)
+    name = models.CharField(max_length=255, blank=True, db_index=True)
+    description = models.TextField(blank=True)
 
     def __unicode__(self):
         return "{0}: {1}".format(self.name, self.location)

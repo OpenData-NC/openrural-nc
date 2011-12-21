@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from openrural.error_log.models import Error, Batch
+from openrural.error_log.models import Geocode, Batch
 
 
 class BatchAdmin(admin.ModelAdmin):
@@ -21,10 +21,10 @@ class BatchAdmin(admin.ModelAdmin):
 admin.site.register(Batch, BatchAdmin)
 
 
-class ErrorAdmin(admin.ModelAdmin):
-    list_display = ('id', 'batch', 'date', 'name', 'location',
+class GeocodeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'batch', 'date', 'success', 'location', 'name',
                     'zipcode')
-    list_filter = ('date', 'name', 'scraper', 'zipcode')
+    list_filter = ('success', 'date', 'name', 'scraper', 'zipcode')
     search_fields = ('batch__id', 'location', 'description')
     ordering = ('-date',)
-admin.site.register(Error, ErrorAdmin)
+admin.site.register(Geocode, GeocodeAdmin)
