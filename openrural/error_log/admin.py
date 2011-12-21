@@ -1,7 +1,8 @@
+from django.db import models
 from django.contrib import admin
 
 from openrural.error_log.models import Geocode, Batch
-from openrural.error_log.forms import GeocodeForm
+from openrural.error_log.forms import GeocodeForm, GoogleMapsLink
 
 
 class BatchAdmin(admin.ModelAdmin):
@@ -31,7 +32,9 @@ class GeocodeAdmin(admin.ModelAdmin):
     readonly_fields = ('success', 'name', 'batch', 'news_item', 'scraper',
                        'zipcode')
     form = GeocodeForm
-
+    formfield_overrides = {
+        models.CharField: {'widget': GoogleMapsLink},
+    }
     def save_model(self, request, obj, form, change):
         obj.news_item.location = form.cleaned_data['result']['point']
         obj.news_item.save()
