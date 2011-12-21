@@ -34,4 +34,7 @@ class Geocode(models.Model):
     description = models.TextField(blank=True)
 
     def __unicode__(self):
-        return "{0}: {1}".format(self.name, self.location)
+        if self.name:
+            return "{0}: {1}".format(self.name, self.location)
+        else:
+            return self.location

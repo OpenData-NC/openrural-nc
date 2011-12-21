@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from openrural.error_log.models import Geocode, Batch
+from openrural.error_log.forms import GeocodeForm
 
 
 class BatchAdmin(admin.ModelAdmin):
@@ -27,5 +28,15 @@ class GeocodeAdmin(admin.ModelAdmin):
     list_filter = ('success', 'date', 'name', 'scraper', 'zipcode')
     search_fields = ('batch__id', 'location', 'description')
     ordering = ('-date',)
-    readonly_fields = ('success', 'name', 'batch', 'news_item', 'scraper')
+    readonly_fields = ('success', 'name', 'batch', 'news_item', 'scraper',
+                       'zipcode')
+    form = GeocodeForm
+
+    def save_model(self, request, obj, form, change):
+        obj.news_item.location = form.cleaned_data['result']['point']
+        obj.news_item.save()
+        obj.name = ''
+        obj.success = True
+        obj.save()
+
 admin.site.register(Geocode, GeocodeAdmin)
