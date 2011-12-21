@@ -4,6 +4,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from ebpub import geocoder
+from ebpub.streets.models import ImproperCity
 
 from openrural.error_log.models import Geocode
 
@@ -17,7 +18,7 @@ class GoogleMapsLink(forms.TextInput):
         html = super(GoogleMapsLink, self).render(name, value, attrs=None)
         location = urllib.urlencode({'q': value})
         link = "http://maps.google.com/maps?{0}".format(location)
-        html += "&nbsp;<a href='{0}'>Google Map</a>".format(link)
+        html += "&nbsp;&nbsp;<a href='{0}'>Google Map</a>".format(link)
         return mark_safe(html)
 
 
@@ -33,6 +34,7 @@ class GeocodeForm(forms.ModelForm):
             self.cleaned_data['result'] = smart_geocoder.geocode(location)
         except geocoder.InvalidBlockButValidStreet, e:
             raise forms.ValidationError('InvalidBlockButValidStreet')
-        except geocoder.GeocodingException, e:
+        except (geocoder.GeocodingException, geocoder.ParsingError,
+                ImproperCity), e:
             raise forms.ValidationError(unicode(e))
         return location
