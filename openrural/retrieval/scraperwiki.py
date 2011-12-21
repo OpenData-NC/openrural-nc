@@ -36,6 +36,7 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
         self.num_skipped = 0
         self.batch = \
             error_log.Batch.objects.create(scraper=self.schema_slugs[0])
+        self.geocode_log = None
         if self.geocoder_type == 'google':
             from openrural.retrieval.geocoders import GoogleGeocoder
             self._geocoder = GoogleGeocoder()
@@ -82,6 +83,7 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
     def parse_list(self, data):
         for row in json.loads(data):
             self.batch.num += 1
+            self.geocode_log = None
             yield row
 
     def update(self):
@@ -97,6 +99,12 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
         Tries to geocode the given location string, returning a Point object
         or None.
         """
+        self.geocode_log = error_log.Geocode(
+            batch=self.batch,
+            scraper=self.schema_slugs[0],
+            location=location_name,
+            zipcode=zipcode or '',
+        )
         self.batch.num_geocoded += 1
         # Try to lookup the adress, if it is ambiguous, attempt to use
         # any provided zipcode information to resolve the ambiguity.
@@ -129,12 +137,15 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
             else:
                 return in_zip[0]
         except (GeocodingException, ParsingError, ImproperCity) as e:
-            self.batch.errors.create(
-                scraper=self.schema_slugs[0],
-                name=type(e).__name__,
-                location=location_name,
-                zipcode=zipcode or '',
-                description=traceback.format_exc(),
-            )
+            self.geocode_log.success = False
+            self.geocode_log.name = type(e).__name__
+            self.geocode_log.description = traceback.format_exc()
             self.logger.error(unicode(e))
             return None
+
+    def create_newsitem(self, attributes, **kwargs):
+        news_item = super(ScraperWikiScraper, self).create_newsitem(attributes,
+                                                                    **kwargs)
+        self.geocode_log.news_item = news_item
+        self.geocode_log.save()
+        return news_item
