@@ -9,6 +9,12 @@ from ebpub.settings_default import *
 # CORE DJANGO SETTINGS #
 ########################
 
+ADMINS = (
+    ('Open Rural Team', 'openrural-team@caktusgroup.com'),
+)
+
+MANAGERS = ADMINS
+
 DEBUG = True
 TIME_ZONE = 'US/Eastern'
 
