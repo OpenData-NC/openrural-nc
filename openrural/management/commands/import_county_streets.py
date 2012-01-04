@@ -23,32 +23,45 @@ from django.core.management.base import BaseCommand
 from ebpub.utils.script_utils import die, makedirs, wget, unzip
 import os
 import tempfile
+from optparse import make_option, OptionParser
+
 
 class Command(BaseCommand):
+    option_list = BaseCommand.option_list + (
+        make_option("-d", "--dir", action="store", type="string", dest="dir"),
+    )
     help = 'Import NC streets & blocks for the given county to ebpub.'
 
     def handle(self, county, **options):
         # First we download a bunch of zipfiles of TIGER data.
-        TMP = tempfile.mkdtemp()
+        if options['dir']:
+            TMP = options['dir']
+            download = not os.path.exists(TMP)
+            if download:
+                os.makedirs(TMP)
+        else:
+            TMP = tempfile.mkdtemp()
+            download = True
         os.chdir(TMP)
-        print 'Download TIGER data to %s' % TMP
         OUTDIR = os.path.join(TMP, 'tiger_data')
-        BASEURL= 'ftp://ftp2.census.gov/geo/tiger/TIGER2010'
         STATE = '37' # NC
-        ZIPS = ("PLACE/2010/tl_2010_%s_place10.zip" % STATE,
-                "EDGES/tl_2010_%s_edges.zip" % county,
-                "FACES/tl_2010_%s_faces.zip" % county,
-                "FEATNAMES/tl_2010_%s_featnames.zip" % county,
-                )
-        makedirs(OUTDIR) or die("couldn't create directory %s" % OUTDIR)
-        for fname in ZIPS:
-            wget('%s/%s' % (BASEURL, fname), cwd=OUTDIR) or die(
-                "Could not download %s/%s" % (BASEURL, fname))
+        if download:
+            print 'Download TIGER data to %s' % TMP
+            BASEURL= 'ftp://ftp2.census.gov/geo/tiger/TIGER2010'
+            ZIPS = ("PLACE/2010/tl_2010_%s_place10.zip" % STATE,
+                    "EDGES/tl_2010_%s_edges.zip" % county,
+                    "FACES/tl_2010_%s_faces.zip" % county,
+                    "FEATNAMES/tl_2010_%s_featnames.zip" % county,
+                    )
+            makedirs(OUTDIR) or die("couldn't create directory %s" % OUTDIR)
+            for fname in ZIPS:
+                wget('%s/%s' % (BASEURL, fname), cwd=OUTDIR) or die(
+                    "Could not download %s/%s" % (BASEURL, fname))
 
-        import glob
-        for fname in glob.glob(os.path.join(OUTDIR, '*zip')):
-            unzip(fname, cwd=OUTDIR) or die("Could not unzip %s" % fname)
-        print "Shapefiles unzipped in %s" % OUTDIR
+            import glob
+            for fname in glob.glob(os.path.join(OUTDIR, '*zip')):
+                unzip(fname, cwd=OUTDIR) or die("Could not unzip %s" % fname)
+            print "Shapefiles unzipped in %s" % OUTDIR
 
         # Now we load them into our blocks table.
         from ebpub.streets.blockimport.tiger import import_blocks
@@ -81,4 +94,5 @@ class Command(BaseCommand):
         print "Done."
 
         print "Removing temp directory %s" % TMP
-        os.system('rm -rf %s' % TMP)
+        if not options['dir']:
+            os.system('rm -rf %s' % TMP)
