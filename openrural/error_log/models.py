@@ -15,14 +15,14 @@ class GeocodeBatch(models.Model):
     num_geocoded_success = models.PositiveIntegerField(default=0)
 
     class Meta(object):
-        verbose_name_plural = 'Batches'
+        verbose_name_plural = 'Geocode Batches'
 
     def __unicode__(self):
         return "{0} ({1})".format(self.scraper, self.id)
 
 
 class Geocode(models.Model):
-    batch = models.ForeignKey(Batch, related_name='geocodes')
+    batch = models.ForeignKey(GeocodeBatch, related_name='geocodes')
     news_item = models.ForeignKey(NewsItem, related_name='geocodes', null=True,
                                   blank=True)
     date = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -38,3 +38,24 @@ class Geocode(models.Model):
             return "{0}: {1}".format(self.name, self.location)
         else:
             return self.location
+
+
+# class MessageBatch(models.Model):
+#     start_time = models.DateTimeField(auto_now_add=True, db_index=True)
+
+#     class Meta(object):
+#         verbose_name_plural = 'Message Batches'
+
+#     def __unicode__(self):
+#         return self.start_time
+
+
+class Message(models.Model):
+    # batch = models.ForeignKey(Batch, related_name='message')
+    date = models.DateTimeField(auto_now_add=True, db_index=True)
+    logger = models.CharField(max_length=512, db_index=True)
+    level = models.CharField(max_length=16, db_index=True)
+    body = models.TextField()
+    funcname = models.CharField("Function", max_length=512, blank=True)
+    pathname = models.CharField("Path", max_length=2048, blank=True)
+    lineno = models.PositiveIntegerField("Line", null=True, blank=True)

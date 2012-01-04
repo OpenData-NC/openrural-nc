@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib import admin
 
-from openrural.error_log.models import Geocode, Batch
+from openrural.error_log.models import Geocode, GeocodeBatch, Message
 from openrural.error_log.forms import GeocodeForm, GoogleMapsLink
 
 
@@ -20,7 +20,7 @@ class BatchAdmin(admin.ModelAdmin):
             rate = 0.0
         return '{0:.2%}'.format(rate)
 
-admin.site.register(Batch, BatchAdmin)
+admin.site.register(GeocodeBatch, BatchAdmin)
 
 
 class GeocodeAdmin(admin.ModelAdmin):
@@ -43,3 +43,21 @@ class GeocodeAdmin(admin.ModelAdmin):
         obj.save()
 
 admin.site.register(Geocode, GeocodeAdmin)
+
+
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'date', 'logger', 'level', 'location', 'description')
+    list_filter = ('logger', 'level')
+    search_fields = ('body', 'logger')
+    ordering = ('-date',)
+    readonly_fields = ('date', 'logger', 'level', 'funcname', 'pathname',
+                       'lineno')
+
+    def location(self, obj):
+        return "...{0} - {1}:{2}".format(obj.pathname[-30:], obj.funcname,
+                                         obj.lineno)
+
+    def description(self, obj):
+        return "{0}...".format(obj.body[:100])
+
+admin.site.register(Message, MessageAdmin)
