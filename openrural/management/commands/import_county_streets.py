@@ -88,9 +88,9 @@ class Command(BaseCommand):
         # after you have imported *all* your blocks.
 
         from ebpub.streets.bin import populate_streets
-        populate_streets.main(['-v', '-v', '-v', '-v', 'streets'])
-        populate_streets.main(['-v', '-v', '-v', '-v', 'block_intersections'])
-        populate_streets.main(['-v', '-v', '-v', '-v', 'intersections'])
+        populate_streets.main(['streets'])
+        populate_streets.main(['block_intersections'])
+        populate_streets.main(['intersections'])
         print "Done."
 
         print "Removing temp directory %s" % TMP
