@@ -3,7 +3,7 @@ from django.db import models
 from ebpub.db.models import NewsItem
 
 
-class Batch(models.Model):
+class GeocodeBatch(models.Model):
     scraper = models.CharField(max_length=255, db_index=True)
     start_time = models.DateTimeField(auto_now_add=True, db_index=True)
     end_time = models.DateTimeField(null=True, blank=True, db_index=True)

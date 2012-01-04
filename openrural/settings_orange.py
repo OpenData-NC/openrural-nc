@@ -49,4 +49,3 @@ METRO_LIST = (
         'city_location_type': 'cities',
     },
 )
-
