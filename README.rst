@@ -139,3 +139,25 @@ Derive streets and intersections from the blocks data::
     $ populate_streets -v -v -v -v streets
     $ populate_streets -v -v -v -v block_intersections
     $ populate_streets -v -v -v -v intersections
+
+Configure Database Logger
+-------------------------
+
+To log debugging information to the database for later analasys, you can use the DatabaseHandler with specific loggers::
+
+    LOGGING = {
+        'handlers': {
+            'database': {
+                'level': 'DEBUG',
+                'class': 'openrural.error_log.logger.DatabaseHandler',
+            },
+        },
+        'loggers': {
+            'ebpub.streets.blockimport': {
+                'handlers': ['database',],
+                'level': 'DEBUG',
+            }
+        }
+    }
+
+This will, of course, slow down any intensive operation as it is continually interacting with the database.
