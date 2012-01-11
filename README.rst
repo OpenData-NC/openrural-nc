@@ -32,6 +32,14 @@ Create a new virtualenv and install the Open Rural packages::
     $ pip install --no-index --find-links=file:$PWD/requirements/sdists/ -r requirements/openrural.txt
     $ add2virtualenv .
 
+If you're developing OpenBlock, you should install the development version::
+
+    $ mkvirtualenv --distribute -p python2.6 openrural
+    $ pip install -r requirements/deploy.txt
+    $ fab develop:../openblock,no_index=True
+    $ pip install -r requirements/dev.txt
+    $ add2virtualenv .
+
 Create a PostgreSQL database for development::
 
     $ createdb --template=template_postgis openblock_devel

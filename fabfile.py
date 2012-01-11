@@ -7,6 +7,7 @@ import tempfile
 from getpass import getpass
 from fabric.api import cd, env, local, require, run, sudo, task
 from fabric.contrib.files import exists, upload_template
+from fabric.colors import yellow
 
 from argyle import nginx, postgres, rabbitmq, supervisor, system
 
@@ -487,3 +488,34 @@ def deploy():
     mgmt('syncdb', '--migrate')
     restart_supervisor()
 
+
+@task
+def update_openblock():
+    """Update local sdists to latest OpenBlock version"""
+
+    tf = tempfile.mktemp(suffix='-openblock')
+    local('git clone git://github.com/openplans/openblock.git {0}'.format(tf))
+    dest = os.path.join(PROJECT_ROOT, 'requirements', 'sdists')
+    for name in ('obadmin', 'ebdata', 'ebpub'):
+        package = os.path.join(tf, name)
+        os.chdir(package)
+        local('pip install -e {source} -d {dest}'.format(source=package,
+                                                         dest=dest))
+    shutil.rmtree(tf)
+
+
+@task
+def develop(repo, no_index=False):
+    repo = os.path.abspath(repo)
+    sdists = os.path.join(PROJECT_ROOT, 'requirements', 'sdists')
+    sdists = '--no-index --find-links=file://%s' % sdists
+    for name in ('ebpub', 'ebdata', 'obadmin'):
+        print(yellow('Installing {0}'.format(name)))
+        package = os.path.join(repo, name)
+        os.chdir(package)
+        cmd = ['pip install']
+        if no_index:
+            cmd.append(sdists)
+        cmd.append('-r requirements.txt')
+        local(' '.join(cmd))
+        local('python setup.py develop --no-deps')
