@@ -9,9 +9,9 @@ import traceback
 import ebdata.retrieval.log  # sets up base handlers.
 from ebdata.retrieval.scrapers.newsitem_list_detail import NewsItemListDetailScraper
 from ebpub.geocoder import GeocodingException, ParsingError, AmbiguousResult
-from ebpub.streets.models import ImproperCity
 
 from openrural.error_log import models as error_log
+from django.core.urlresolvers import NoReverseMatch
 
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -35,7 +35,7 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
         self.num_changed = 0
         self.num_skipped = 0
         self.batch = \
-            error_log.Batch.objects.create(scraper=self.schema_slugs[0])
+            error_log.GeocodeBatch.objects.create(scraper=self.schema_slugs[0])
         self.geocode_log = None
         if self.geocoder_type == 'google':
             from openrural.retrieval.geocoders import GoogleGeocoder
@@ -136,7 +136,7 @@ class ScraperWikiScraper(NewsItemListDetailScraper):
                 return in_zip[0]
             else:
                 return in_zip[0]
-        except (GeocodingException, ParsingError, ImproperCity) as e:
+        except (GeocodingException, ParsingError, NoReverseMatch) as e:
             self.geocode_log.success = False
             self.geocode_log.name = type(e).__name__
             self.geocode_log.description = traceback.format_exc()

@@ -6,7 +6,6 @@ from optparse import OptionParser
 
 from ebpub import geocoder
 from ebpub.db.models import NewsItem, Schema, SchemaField
-from ebpub.streets.models import ImproperCity
 from ebpub.utils.script_utils import add_verbosity_options, setup_logging_from_opts
 import ebdata.retrieval.log  # sets up base handlers.
 # Note there's an undocumented assumption in ebdata that we want to

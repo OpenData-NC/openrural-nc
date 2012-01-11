@@ -4,7 +4,6 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from ebpub import geocoder
-from ebpub.streets.models import ImproperCity
 
 from openrural.error_log.models import Geocode
 
@@ -34,7 +33,6 @@ class GeocodeForm(forms.ModelForm):
             self.cleaned_data['result'] = smart_geocoder.geocode(location)
         except geocoder.InvalidBlockButValidStreet, e:
             raise forms.ValidationError('InvalidBlockButValidStreet')
-        except (geocoder.GeocodingException, geocoder.ParsingError,
-                ImproperCity), e:
+        except (geocoder.GeocodingException, geocoder.ParsingError), e:
             raise forms.ValidationError(unicode(e))
         return location
