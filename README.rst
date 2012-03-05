@@ -80,19 +80,14 @@ If everything went smoothly, you can now runserver::
 
     $ django-admin.py runserver
 
-Importing Zip codes
+Columbus County, NC
 -------------------
 
-To import NC zip codes using the provided management command, run::
+To import data for Columbus County, NC::
 
     $ django-admin.py import_nc_zips
-
-Importing County streets
-------------------------
-
-To import NC county streets using the provided management command, run::
-
     $ django-admin.py import_county_streets 37047
+    $ django-admin.py import import_columbus_county
 
 Where 37047 is the U.S. Census county ID for the county you want to import
 (37047 = Columbus County, NC).

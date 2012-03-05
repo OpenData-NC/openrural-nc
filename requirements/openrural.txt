@@ -7,3 +7,4 @@ gunicorn==0.13.4
 # seacucumber does not work with boto 2.1 yet
 boto==2.0
 seacucumber==1.2
+PIL==1.1.7
