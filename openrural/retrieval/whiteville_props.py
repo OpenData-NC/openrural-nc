@@ -5,6 +5,7 @@ import csv
 import logging
 import datetime
 from optparse import OptionParser
+from collections import defaultdict
 
 from django.contrib.gis.gdal import DataSource
 
@@ -64,8 +65,71 @@ class PropertyTransactions(BaseScraper):
                     zipcode=item['ZipCode']
                 )
 
-    def parse_date(self, string_value):
-        if string_value != '0' and len(string_value) >= 6 and len(string_value) <= 8:
+    def stats(self, csvreader, layer):
+        feature_by_prop = defaultdict(list)
+        feature_count = len(layer)
+        for feature in layer:
+            propval = int(feature.get('PROP'))
+            feature_by_prop[propval].append(feature)
+
+        import pdb; pdb.set_trace()
+        zero_date_count = 0
+        invalid_date_count = 0
+        props_missing_from_shapefile = 0
+        item_count = 0
+        valid_date_but_no_feature = 0
+        valid_date_but_multi_feature = 0
+        valid_date_and_single_feature = 0
+        item_by_prop = defaultdict(list)
+        for rownum, item in enumerate(csvreader):
+            item_count += 1
+            propval = int(item['Prop'])
+            item_by_prop[propval].append(item)
+            item_date = item['SaleDate']
+            if item_date == '0':
+                zero_date_count += 1
+                item_date = None
+            else:
+                item_date = self.parse_date(item_date, rownum=rownum)
+                if item_date is None:
+                    invalid_date_count += 1
+
+            if item_date:
+                if propval not in feature_by_prop:
+                    valid_date_but_no_feature += 1
+                else:
+                    features = feature_by_prop[propval]
+                    if len(features) == 1:
+                        valid_date_and_single_feature += 1
+                    else:
+                        valid_date_but_multi_feature += 1
+
+        csv_props_missing_from_shapefile = []
+        for k in item_by_prop.keys():
+            if k not in feature_by_prop:
+                csv_props_missing_from_shapefile.append(k)
+
+        shapefile_props_missing_from_csv = []
+        for k in feature_by_prop.keys():
+            if k not in item_by_prop:
+                shapefile_props_missing_from_csv.append(k)
+
+        self.logger.info('Shapefile has %s features with %s distinct properties.', feature_count, len(feature_by_prop))
+        self.logger.info('CSV file has %s rows, with %s distinct properties.', item_count, len(item_by_prop))
+        self.logger.info('CSV file has %s "0" dates, and %s invalid dates.', zero_date_count, invalid_date_count)
+        self.logger.info('CSV file references %s properties not found in shapefile; '
+            'shapefile references %s properties not found in CSV.' % (len(csv_props_missing_from_shapefile),
+            len(shapefile_props_missing_from_csv)))
+
+        valid_date_count = item_count - invalid_date_count - zero_date_count
+        self.logger.info('%s CSV rows with valid dates. %s have no mapping, %s have multiple mappings, %s have a single mapping.' % \
+            (valid_date_count, valid_date_but_no_feature, valid_date_but_multi_feature, valid_date_and_single_feature))
+
+
+    def parse_date(self, string_value, rownum=None):
+        if len(string_value) < 6 or len(string_value) > 8:
+            self.logger.error('%sUnable to parse %s into year, month, day.' % (rownum and 'Row %s: ' % rownum or '', string_value))
+        elif string_value != '0':
             year = int(string_value[-4:])
             mmdd = string_value[:-4]
             mmdd_len = len(mmdd)
@@ -85,8 +149,8 @@ class PropertyTransactions(BaseScraper):
             try:
                 return datetime.date(year, mm, dd)
             except ValueError, e:
-                message = 'Unable to parse date %s (year=%s, month=%s, day=%s): %s' % (string_value, year,
-                    mm, dd, e)
+                message = '%sUnable to parse date %s (year=%s, month=%s, day=%s): %s' % (rownum and 'Row %s: ' % rownum or '',
+                    string_value, year, mm, dd, e)
                 self.logger.error(message)
 
     def _create_schema(self):
@@ -183,15 +247,23 @@ def main():
     parser = OptionParser()
     parser.add_option('-c', '--clear', help='Clear schema',
                       action="store_true", dest="clear")
+    parser.add_option('-s', '--stats', help='Report file stats only',
+                      action="store_true", dest="stats")
     add_verbosity_options(parser)
     opts, args = parser.parse_args(sys.argv)
     setup_logging_from_opts(opts, logger)
     if len(args) != 3:
         parser.error("Please specify a CSV file and shapefile to import")
     csv_name, shp_name = args[1], args[2]
-    PropertyTransactions(clear=opts.clear).update(
-        csv.DictReader(open(csv_name)),
-        DataSource(shp_name)[0])
+    csvreader = csv.DictReader(open(csv_name))
+    layer = DataSource(shp_name)[0]
+
+    prop_trans = PropertyTransactions(clear=opts.clear)
+
+    if opts.stats:
+        prop_trans.stats(csvreader, layer)
+    else:
+        prop_trans.update(csvreader, layer)
 
 
 if __name__ == '__main__':
