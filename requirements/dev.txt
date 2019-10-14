@@ -1,6 +1,6 @@
 importlib==1.0.2
 setuptools-git==0.4.2
-gunicorn==0.13.4
+gunicorn==19.5.0
 # seacucumber does not work with boto 2.1 yet
 boto==2.0
 seacucumber==1.2
